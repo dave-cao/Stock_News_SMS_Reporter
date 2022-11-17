@@ -1,3 +1,4 @@
+# TODO: Sunday, Monday, Tuesday
 import datetime
 
 import requests
@@ -7,8 +8,22 @@ from config import config
 
 # Datetime variables
 TODAY = datetime.date.today()
-YESTERDAY = str(TODAY - datetime.timedelta(days=1))
-TWO_DAYS_AGO = str(TODAY - datetime.timedelta(days=2))
+weekday = TODAY.weekday()
+
+days = {f"{i}_DAYS_AGO": str(TODAY - datetime.timedelta(days=i)) for i in range(1, 5)}
+
+# if tuesday
+if weekday == 1:
+    days["2_DAYS_AGO"] = days["4_DAYS_AGO"]
+# if sunday
+if weekday == 6:
+    days["1_DAYS_AGO"] = days["2_DAYS_AGO"]
+    days["2_DAYS_AGO"] = days["3_DAYS_AGO"]
+# if monday
+if weekday == 0:
+    days["1_DAYS_AGO"] = days["3_DAYS_AGO"]
+    days["2_DAYS_AGO"] = days["4_DAYS_AGO"]
+
 
 # Twilio authentication
 ACCOUNT_SID = config["ACCOUNT_SID"]
@@ -45,8 +60,8 @@ connection.raise_for_status()
 data = connection.json()["Time Series (Daily)"]
 
 # grab close data and get percent diff
-stock_yesterday = float(data[YESTERDAY]["4. close"])
-stock_two_days_ago = float(data[TWO_DAYS_AGO]["4. close"])
+stock_yesterday = float(data[days["1_DAYS_AGO"]]["4. close"])
+stock_two_days_ago = float(data[days["2_DAYS_AGO"]]["4. close"])
 percent_diff = round((stock_yesterday - stock_two_days_ago) / stock_two_days_ago * 100)
 
 # if there is a bigger than 2% change in close data, grab current headline news
